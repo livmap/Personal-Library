@@ -10,6 +10,7 @@
 
 const bodyParser = require('body-parser')
 const Book = require('../models').Book
+var ObjectId = require('mongodb').ObjectId;
 
 module.exports = function (app) {
 
@@ -47,14 +48,14 @@ module.exports = function (app) {
       //response will contain new book object including atleast _id and title
 
       if(!title){
-        res.send("Missing required field: title")
+        res.send("missing required field title")
         return;
       } 
 
       const newBook = new Book({ title, comments: [] })
       try {
         const book = await newBook.save()
-        res.json({ _id: book.id, title: book.title})
+        res.json({ _id: book._id, title: book.title})
       } catch (err) {
         res.send("error")
       }
@@ -107,10 +108,11 @@ module.exports = function (app) {
       try {
         let book = await Book.findById(bookid)
         book.comments.push(comment)
+        await book.save();
         res.json ({
-          comments: book.comments,
-          title: book.title,
           _id: book._id,
+          title: book.title,
+          comments: book.comments,
           commentcount: book.comments.length
         })
       } catch (err) {
@@ -123,12 +125,18 @@ module.exports = function (app) {
       //if successful response will be 'delete successful'
 
       try {
-        const deleted = await Book.findByIdAndDelete(bookid)
-        console.log("deleted :>> ", deleted)
+        const deletedBook = await Book.findByIdAndDelete(bookid);
+    
+        if (!deletedBook) {
+          res.send("no book exists")
+          return
+        }
+    
         res.send("delete successful")
-      } catch(err){
-        res.send("no book exists")
-      }
+      } catch (err) {
+        console.error('Error deleting book:', err);
+        res.status(500).json({ error: 'An error occurred while deleting the book' });
+      } 
 
     });
   
