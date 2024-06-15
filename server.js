@@ -9,6 +9,9 @@ const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
 
+const api = require('./routes/api')
+require('./connection')
+
 const app = express();
 
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -36,6 +39,10 @@ app.use(function(req, res, next) {
     .type('text')
     .send('Not Found');
 });
+
+
+api(app)
+
 
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 3000, function () {
